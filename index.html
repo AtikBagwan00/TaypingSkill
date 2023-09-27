@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Typing Game</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f0f0f0;
+        text-align: center;
+      }
+
+      .game-container {
+        max-width: 600px;
+        margin: 0 auto;
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+      }
+
+      input[type="text"] {
+        width: 100%;
+        padding: 10px;
+        font-size: 16px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        margin-top: 10px;
+      }
+
+      #message {
+        font-weight: bold;
+        margin-top: 10px;
+      }
+    </style>
+  </head>
+  <body  style="background-image: url('file:///C:/Users/HP/Desktop/Taype/Assets/456.jpg'); background-size: cover; background-repeat: no-repeat; background-attachment: fixed;">
+    <div class="game-container">
+      <h1>Type the following text:</h1>
+      <p id="quote"></p>
+      <input type="text" id="input" placeholder="Start typing..." /><br />
+
+      <p id="speed"></p>
+      <p id="message"></p>
+    </div>
+
+    <script>
+      const quoteElement = document.getElementById("quote");
+      const inputElement = document.getElementById("input");
+      const messageElement = document.getElementById("message");
+      const speedElement = document.getElementById("speed");
+
+      let currentQuoteIndex = 0;
+      let correctCharacters = 0;
+      let startTime;
+      let quotes = []; // Array to store fetched quotes
+
+      // Function to fetch quotes from the API
+      async function getQuotes() {
+        const apiUrl = "https://baconipsum.com/api/?type=all-meat&sentences=1";
+
+        try {
+          const response = await fetch(apiUrl);
+
+          if (!response.ok) {
+            throw new Error("Network response was not ok");
+          }
+
+          const data = await response.json();
+
+          if (Array.isArray(data) && data.length > 0) {
+            quotes = data;
+            currentQuoteIndex = 0; // Initialize the quote index
+            showNextQuote(); // Display the first quote
+          } else {
+            console.log("No data found in the response.");
+          }
+        } catch (error) {
+          console.error("Error:", error);
+        }
+      }
+
+     
+    // Function to display the next quote and start countdown
+function showNextQuote() {
+    if (currentQuoteIndex < quotes.length) {
+        quoteElement.textContent = quotes[currentQuoteIndex];
+        inputElement.value = ''; // Clear the input field
+        startTime = null; // Reset the start time
+        messageElement.textContent = ''; // Clear the message
+
+        // Listen for input changes
+        inputElement.addEventListener('input', function checkTypedText() {
+            const typedText = inputElement.value;
+            const quoteText = quotes[currentQuoteIndex];
+
+            if (typedText === quoteText) {
+                // User typed it correctly
+                const typingSpeed = (typedText.split(/\s+/).length / elapsedTime).toFixed(2); // Calculate words per second
+                messageElement.textContent = `Congratulations! You typed it correctly. Your typing speed: ${typingSpeed} wpm`;
+
+                currentQuoteIndex++; // Move to the next quote
+                inputElement.removeEventListener('input', checkTypedText); // Remove the input listener
+
+                // Display countdown before fetching the next quote
+                let countdown = 3; // Initial countdown value
+                const countdownInterval = setInterval(() => {
+                    messageElement.textContent = `Next task in ${countdown} seconds`;
+                    countdown--;
+
+                    if (countdown < 0) {
+                        clearInterval(countdownInterval); // Clear the countdown interval
+                        messageElement.textContent = ''; // Clear the message
+                        showNextQuote(); // Display the next quote
+                    }
+                }, 1000); // Update every 1000 milliseconds (1 second)
+            }
+        });
+    } else {
+        let countdown = 3; // Initial countdown value
+                const countdownInterval = setInterval(() => {
+                    messageElement.textContent = `Next task in ${countdown} seconds`;
+                    countdown--;
+
+                    if (countdown < 0) {
+                        clearInterval(countdownInterval); // Clear the countdown interval
+                        messageElement.textContent = ''; // Clear the message
+                        getQuotes(); // Display the next quote
+                    }
+                }, 1000); // Update every 1000 milliseconds (1 second)
+    }
+}
+
+
+      // Call the showNextQuote function when the page loads
+      window.onload = () => {
+        getQuotes();
+      };
+
+      // Event listener for user input
+      inputElement.addEventListener("input", () => {
+        const typedText = inputElement.value;
+        const quoteText = quotes[currentQuoteIndex];
+
+        if (!startTime) {
+          startTime = Date.now();
+        }
+
+        let elapsedTime = (Date.now() - startTime) / 1000; // Calculate time in seconds
+        let typedWords = typedText
+          .split(/\s+/)
+          .filter((word) => word !== "").length;
+
+        if (typedText === quoteText) {
+          const typingSpeed = (typedWords / elapsedTime).toFixed(2); // Calculate words per second
+          messageElement.textContent = `Congratulations! You typed it correctly. Your typing speed: ${typingSpeed} wpm`;
+          currentQuoteIndex++; // Move to the next quote
+          setTimeout(showNextQuote, 2000); // Display the next quote after a delay
+        } else if (quoteText.startsWith(typedText)) {
+          messageElement.textContent = "Keep going...";
+        } else {
+          messageElement.textContent = "Incorrect. Try again.";
+        }
+      });
+
+      // Call the getQuotes function when the page loads
+      window.onload = () => {
+        getQuotes();
+      };
+    </script>
+  </body>
+</html>
